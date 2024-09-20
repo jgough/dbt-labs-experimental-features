@@ -72,7 +72,7 @@
 
   -- commit each period as a separate transaction
   {% for i in range(num_periods) -%}
-    {%- set msg = "Running for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) -%}
+    {%- set msg = "Running for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ " for " ~ this.name -%}
     {{ print(msg) }}
 
     {%- set period_sql = insert_by_period.get_period_sql(target_cols_csv, sql, timestamp_field, period, start_timestamp, stop_timestamp, i) -%}
@@ -90,7 +90,7 @@
     {%- set sum_rows_inserted = loop_vars['sum_rows_inserted'] + rows_inserted -%}
     {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif %}
 
-    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted" -%}
+    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted to " ~ this.name -%}
     {{ print(msg) }}
 
   {%- endfor %}
