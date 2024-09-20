@@ -75,36 +75,20 @@
     {%- set msg = "Running for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ " for " ~ this.name -%}
     {{ print(msg) }}
 
-    {%- set tmp_identifier = model['name'] ~ '__dbt_incremental_period' ~ i ~ '_tmp' -%}
-    {%- set tmp_relation = insert_by_period.create_relation_for_insert_by_period(tmp_identifier, schema, 'table') -%}
-    {% call statement() -%}
-      {% set tmp_table_sql = insert_by_period.get_period_sql(target_cols_csv,
-                                                       sql,
-                                                       timestamp_field,
-                                                       period,
-                                                       start_timestamp,
-                                                       stop_timestamp,
-                                                       i) %}
-      {{dbt.create_table_as(True, tmp_relation, tmp_table_sql)}}
-    {%- endcall %}
-
-    {{adapter.expand_target_column_types(from_relation=tmp_relation,
-                                         to_relation=target_relation)}}
-    {%- set name = 'main-' ~ i -%}
-    {% call statement(name, fetch_result=True) -%}
+    {%- set period_sql = insert_by_period.get_period_sql(target_cols_csv, sql, timestamp_field, period, start_timestamp, stop_timestamp, i) -%}
+    
+    {% call statement('main-' ~ i, fetch_result=True) -%}
       insert into {{target_relation}} ({{target_cols_csv}})
       (
-          select
-              {{target_cols_csv}}
-          from {{tmp_relation.include(schema=True)}}
+          {{ period_sql }}
       );
     {%- endcall %}
-    {% set result = load_result('main-' ~ i) %}
     
+    {% set result = load_result('main-' ~ i) %}
     {% set rows_inserted = insert_by_period.get_rows_inserted(result) %}
 
     {%- set sum_rows_inserted = loop_vars['sum_rows_inserted'] + rows_inserted -%}
-    {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif -%}
+    {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif %}
 
     {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted to " ~ this.name -%}
     {{ print(msg) }}
