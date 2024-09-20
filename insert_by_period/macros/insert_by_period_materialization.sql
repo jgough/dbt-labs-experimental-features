@@ -92,7 +92,7 @@
     {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif %}
     {%- if loop_vars.update({'sum_data_scanned_in_bytes': sum_data_scanned_in_bytes}) %} {% endif %}
 
-    {%- set formatted_scanned_data = format_bytes(data_scanned_in_bytes) -%}
+    {%- set formatted_scanned_data = insert_by_period.format_bytes(data_scanned_in_bytes) -%}
     {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted, " ~ formatted_scanned_data ~ " scanned for " ~ this.name -%}
     {{ print(msg) }}
 
@@ -114,7 +114,7 @@
   {{ run_hooks(post_hooks, inside_transaction=False) }}
   -- end from the table mat
 
-  {%- set formatted_total_scanned_data = format_bytes(loop_vars['sum_data_scanned_in_bytes']) -%}
+  {%- set formatted_total_scanned_data = insert_by_period.format_bytes(loop_vars['sum_data_scanned_in_bytes']) -%}
   {%- set status_string = "INSERT " ~ loop_vars['sum_rows_inserted'] ~ ", SCANNED " ~ formatted_total_scanned_data -%}
       
   {% call noop_statement('main', status_string) -%}
