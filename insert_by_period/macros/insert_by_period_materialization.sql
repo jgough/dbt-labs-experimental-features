@@ -86,7 +86,7 @@
     
     {% set result = load_result('main-' ~ i) %}
     {% set rows_inserted = insert_by_period.get_rows_inserted(result) %}
-
+    {{ print(result) }}
     {%- set sum_rows_inserted = loop_vars['sum_rows_inserted'] + rows_inserted -%}
     {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif %}
 
