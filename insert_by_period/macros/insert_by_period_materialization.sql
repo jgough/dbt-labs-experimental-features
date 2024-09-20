@@ -68,7 +68,7 @@
 
   {% set target_columns = adapter.get_columns_in_relation(target_relation) %}
   {%- set target_cols_csv = target_columns | map(attribute='quoted') | join(', ') -%}
-  {%- set loop_vars = {'sum_rows_inserted': 0} -%}
+  {%- set loop_vars = {'sum_rows_inserted': 0, 'sum_data_scanned_in_bytes': 0} -%}
 
   -- commit each period as a separate transaction
   {% for i in range(num_periods) -%}
@@ -86,11 +86,14 @@
     
     {% set result = load_result('main-' ~ i) %}
     {% set rows_inserted = insert_by_period.get_rows_inserted(result) %}
-    {{ print(result) }}
+    {% set data_scanned_in_bytes = insert_by_period.get_data_scanned_in_bytes(result) %}
     {%- set sum_rows_inserted = loop_vars['sum_rows_inserted'] + rows_inserted -%}
+    {%- set sum_data_scanned_in_bytes = loop_vars['sum_data_scanned_in_bytes'] + data_scanned_in_bytes -%}
     {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif %}
+    {%- if loop_vars.update({'sum_data_scanned_in_bytes': sum_data_scanned_in_bytes}) %} {% endif %}
 
-    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted to " ~ this.name -%}
+    {%- set formatted_scanned_data = format_bytes(data_scanned_in_bytes) -%}
+    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted, " ~ formatted_scanned_data ~ " scanned for " ~ this.name -%}
     {{ print(msg) }}
 
   {%- endfor %}
@@ -111,8 +114,9 @@
   {{ run_hooks(post_hooks, inside_transaction=False) }}
   -- end from the table mat
 
-  {%- set status_string = "INSERT " ~ loop_vars['sum_rows_inserted'] -%}
-
+  {%- set formatted_total_scanned_data = format_bytes(loop_vars['sum_data_scanned_in_bytes']) -%}
+  {%- set status_string = "INSERT " ~ loop_vars['sum_rows_inserted'] ~ ", SCANNED " ~ formatted_total_scanned_data -%}
+      
   {% call noop_statement('main', status_string) -%}
     -- no-op
   {%- endcall %}
