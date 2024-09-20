@@ -72,7 +72,7 @@
 
   -- commit each period as a separate transaction
   {% for i in range(num_periods) -%}
-    {%- set msg = "Running for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) -%}
+    {%- set msg = "Running for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ " for " ~ this -%}
     {{ print(msg) }}
 
     {%- set tmp_identifier = model['name'] ~ '__dbt_incremental_period' ~ i ~ '_tmp' -%}
@@ -106,7 +106,7 @@
     {%- set sum_rows_inserted = loop_vars['sum_rows_inserted'] + rows_inserted -%}
     {%- if loop_vars.update({'sum_rows_inserted': sum_rows_inserted}) %} {% endif -%}
 
-    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted" -%}
+    {%- set msg = "Ran for " ~ period ~ " " ~ (i + 1) ~ " of " ~ (num_periods) ~ "; " ~ rows_inserted ~ " record(s) inserted to " ~ this -%}
     {{ print(msg) }}
 
   {%- endfor %}
